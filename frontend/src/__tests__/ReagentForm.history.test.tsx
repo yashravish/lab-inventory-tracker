@@ -16,7 +16,6 @@ vi.mock('../api', () => ({
     exportCsvUrl: vi.fn(),
     importCsv: vi.fn(),
     listEvents: vi.fn(),
-    aiQuery: vi.fn(),
   },
   ConflictError: class ConflictError extends Error {},
 }))

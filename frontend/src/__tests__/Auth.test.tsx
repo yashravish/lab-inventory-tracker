@@ -32,7 +32,6 @@ vi.mock('../api', async () => {
       summary: vi.fn(),
       exportCsvUrl: vi.fn(() => '/api/reagents/export.csv'),
       importCsv: vi.fn(),
-      aiQuery: vi.fn(),
       auth: {
         me: vi.fn(),
         login: vi.fn(),

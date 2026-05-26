@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, ConflictError, UnauthorizedError } from './api'
-import type { AiQueryResponse, AuthUser, DashboardSummary, Reagent, ReagentInput, ReagentStatus } from './types'
+import type { AuthUser, DashboardSummary, Reagent, ReagentInput, ReagentStatus } from './types'
 import { DashboardCards } from './components/DashboardCards'
 import { SearchBar } from './components/SearchBar'
 import { ReagentTable, type SortDir, type SortKey } from './components/ReagentTable'
 import { ReagentForm } from './components/ReagentForm'
-import { AskBar } from './components/AskBar'
 import { LoginGate } from './components/LoginGate'
 
 type Filter = 'ALL' | ReagentStatus
@@ -47,8 +46,6 @@ export default function App() {
   const [totalElements, setTotalElements] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [importNotice, setImportNotice] = useState<string | null>(null)
-  const [aiResult, setAiResult] = useState<AiQueryResponse | null>(null)
-  const [aiBusy, setAiBusy] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -98,29 +95,22 @@ export default function App() {
 
   useEffect(() => {
     if (!authUser) return
-    if (aiResult) return
     const handle = setTimeout(
       () => { void load({ search, page, size: pageSize, sortKey, sortDir }) },
       search ? 200 : 0,
     )
     return () => clearTimeout(handle)
-  }, [authUser, search, page, pageSize, sortKey, sortDir, load, aiResult])
+  }, [authUser, search, page, pageSize, sortKey, sortDir, load])
 
   // Status filter is applied client-side on the current page.
   // Server pagination is the source of truth; the filter narrows what's visible
   // among the rows already fetched. The pitch: server pagination is correct,
   // this is a pragmatic local refinement.
   const visibleReagents = useMemo(() => {
-    if (aiResult) return aiResult.page.content
     return statusFilter === 'ALL'
       ? reagents
       : reagents.filter((r) => r.status === statusFilter)
-  }, [reagents, statusFilter, aiResult])
-
-  const displayTotalElements = aiResult ? aiResult.page.totalElements : totalElements
-  const displayTotalPages = aiResult ? aiResult.page.totalPages : totalPages
-  const displayPage = aiResult ? aiResult.page.number : page
-  const displayPageSize = aiResult ? aiResult.page.size : pageSize
+  }, [reagents, statusFilter])
 
   function onSort(key: SortKey) {
     if (key === 'status') return // status is computed, not server-sortable
@@ -194,25 +184,6 @@ export default function App() {
     return () => clearTimeout(t)
   }, [importNotice])
 
-  async function handleAsk(q: string) {
-    setAiBusy(true)
-    try {
-      const res = await api.aiQuery(q)
-      setAiResult(res)
-      setError(null)
-      const sum = await api.summary().catch(() => null)
-      if (sum) setSummary(sum)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'AI query failed')
-    } finally {
-      setAiBusy(false)
-    }
-  }
-
-  function clearAi() {
-    setAiResult(null)
-  }
-
   async function handleSignOut() {
     setUserMenuOpen(false)
     try {
@@ -223,7 +194,6 @@ export default function App() {
     setAuthUser(null)
     setReagents([])
     setSummary(null)
-    setAiResult(null)
     setError(null)
   }
 
@@ -289,20 +259,7 @@ export default function App() {
           <button className="btn btn-primary" onClick={openCreate}>Add</button>
         </div>
 
-        <AskBar
-          interpretation={aiResult?.interpretation ?? null}
-          busy={aiBusy}
-          onAsk={(q) => void handleAsk(q)}
-          onClear={clearAi}
-        />
-
         <DashboardCards summary={summary} filter={statusFilter} onFilterChange={onStatusFilterChange} />
-
-        {aiResult && (
-          <div className="ai-banner" role="status">
-            AI filter applied — Clear to use manual filters.
-          </div>
-        )}
 
         {error && (
           <div className="error-banner" role="alert">
@@ -320,7 +277,7 @@ export default function App() {
 
         <ReagentTable
           reagents={visibleReagents}
-          loading={loading || aiBusy}
+          loading={loading}
           search={search}
           sortKey={sortKey}
           sortDir={sortDir}
@@ -329,11 +286,11 @@ export default function App() {
           onDelete={handleDelete}
           onClearSearch={() => onSearchChange('')}
           onCreate={openCreate}
-          page={displayPage}
-          pageSize={displayPageSize}
-          totalElements={displayTotalElements}
-          totalPages={displayTotalPages}
-          statusFilterActive={statusFilter !== 'ALL' && !aiResult}
+          page={page}
+          pageSize={pageSize}
+          totalElements={totalElements}
+          totalPages={totalPages}
+          statusFilterActive={statusFilter !== 'ALL'}
           onPageChange={setPage}
           onPageSizeChange={onPageSizeChange}
           toolbar={
@@ -342,7 +299,7 @@ export default function App() {
               onSearchChange={onSearchChange}
               statusFilter={statusFilter}
               onStatusFilterChange={onStatusFilterChange}
-              rowCount={displayTotalElements}
+              rowCount={totalElements}
               exportHref={api.exportCsvUrl()}
               onImportFile={(f) => void handleImport(f)}
             />

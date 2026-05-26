@@ -73,22 +73,6 @@ export interface ReagentEvent {
   createdAt: string
 }
 
-export interface AiQueryFilter {
-  search?: string | null
-  status?: ReagentStatus | null
-  hazardClass?: HazardClass | null
-  expiresWithinDays?: number | null
-  sort?: string | null
-  size?: number | null
-}
-
-export interface AiQueryResponse {
-  interpretation: string
-  filter: AiQueryFilter
-  page: PageResponse<Reagent>
-  fallback?: boolean | null
-}
-
 export interface AuthUser {
   username: string
   displayName: string

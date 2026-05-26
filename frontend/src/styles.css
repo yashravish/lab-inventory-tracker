@@ -699,64 +699,6 @@ select optgroup {
 .event-diff-before { color: var(--text-muted); }
 .event-diff-after { color: var(--text); }
 
-/* ---------- AskBar ---------- */
-.askbar {
-  margin-bottom: 12px;
-}
-.askbar-input-wrap {
-  position: relative;
-  max-width: 640px;
-}
-.askbar-input {
-  width: 100%;
-  height: 36px;
-  padding: 0 64px 0 12px;
-  font-size: 13px;
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--text);
-  font-family: inherit;
-}
-.askbar-input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-  border-color: var(--accent);
-}
-.askbar-input:disabled {
-  background: var(--surface-alt);
-  color: var(--text-faint);
-}
-.askbar-chip {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  pointer-events: none;
-}
-.askbar-interp {
-  margin-top: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: var(--text-muted);
-  max-width: 640px;
-}
-.ai-banner {
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
 /* ---------- Pagination ---------- */
 .pagination {
   display: flex;

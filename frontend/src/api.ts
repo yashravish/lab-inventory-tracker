@@ -1,4 +1,4 @@
-import type { AiQueryResponse, AuthUser, DashboardSummary, ImportResult, PageResponse, Reagent, ReagentEvent, ReagentInput } from './types'
+import type { AuthUser, DashboardSummary, ImportResult, PageResponse, Reagent, ReagentEvent, ReagentInput } from './types'
 
 const BASE = import.meta.env?.VITE_API_BASE_URL ?? 'http://localhost:8082'
 
@@ -98,13 +98,6 @@ export const api = {
   },
   listEvents(reagentId: number): Promise<ReagentEvent[]> {
     return fetch(`${BASE}/api/reagents/${reagentId}/history`, withCreds()).then((r) => handle<ReagentEvent[]>(r))
-  },
-  aiQuery(q: string, size?: number): Promise<AiQueryResponse> {
-    return fetch(`${BASE}/api/ai/query`, withCreds({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q, size }),
-    })).then((r) => handle<AiQueryResponse>(r))
   },
   auth: {
     me(): Promise<AuthUser> {

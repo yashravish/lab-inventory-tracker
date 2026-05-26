@@ -35,7 +35,6 @@ vi.mock('../api', async () => {
       summary: vi.fn(),
       exportCsvUrl: vi.fn(() => '/api/reagents/export.csv'),
       importCsv: vi.fn(),
-      aiQuery: vi.fn(),
       auth: {
         me: vi.fn(),
         login: vi.fn(),
@@ -334,48 +333,6 @@ describe('App', () => {
 
     const banner = await screen.findByRole('status')
     expect(banner).toHaveTextContent('Imported: 3 created, 1 updated, 0 skipped.')
-  })
-
-  it('runs an AI query, narrows the table, and clears back to manual', async () => {
-    const user = userEvent.setup()
-    const aiRow: Reagent = {
-      ...SAMPLE[0],
-      id: 42,
-      name: 'AI-Only Flammable',
-    }
-    mockedApi.aiQuery.mockResolvedValue({
-      interpretation: 'Flammables expiring within 30 days.',
-      filter: { hazardClass: 'FLAMMABLE', expiresWithinDays: 30, sort: 'expirationDate,asc' },
-      page: pageOf([aiRow], { page: 0, size: 25, totalElements: 1 }),
-      fallback: null,
-    })
-
-    render(<App />)
-    await screen.findByText('Ethanol')
-
-    const input = screen.getByLabelText('Ask your inventory')
-    await user.type(input, 'flammables expiring within 30 days')
-    await user.keyboard('{Enter}')
-
-    await waitFor(() => {
-      expect(mockedApi.aiQuery).toHaveBeenCalledTimes(1)
-    })
-    expect(mockedApi.aiQuery.mock.calls[0][0]).toBe('flammables expiring within 30 days')
-
-    const interp = await screen.findByTestId('askbar-interp')
-    expect(interp).toHaveTextContent('Flammables expiring within 30 days.')
-
-    const table = screen.getByTestId('reagent-table')
-    expect(within(table).getByText('AI-Only Flammable')).toBeInTheDocument()
-    expect(within(table).queryByText('Ethanol')).not.toBeInTheDocument()
-    expect(within(table).queryByText('Methanol')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: /Clear AI filter/i }))
-
-    await waitFor(() => {
-      expect(within(screen.getByTestId('reagent-table')).getByText('Ethanol')).toBeInTheDocument()
-    })
-    expect(screen.queryByTestId('askbar-interp')).not.toBeInTheDocument()
   })
 
   it('shows a conflict banner with a Reload button when update returns 409', async () => {

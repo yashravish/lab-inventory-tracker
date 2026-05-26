@@ -226,8 +226,6 @@ manually — the backend's `DatabaseUrlEnvironmentPostProcessor` parses
    | `APP_SEED_USERNAME` | `yash.s` | Change from defaults before going public. |
    | `APP_SEED_PASSWORD` | (strong password) | **Required** — do not ship the default to production. |
    | `APP_SEED_DISPLAY_NAME` | `Lab Tech` | Optional. |
-   | `ANTHROPIC_API_KEY` | (optional) | Omit to keep AI in mock mode. |
-   | `MOCK_AI` | `false` | Optional override. |
 
    `PORT` is injected by Railway automatically; `application.properties` binds
    `server.port=${PORT:...}`.
@@ -296,9 +294,6 @@ verify the dashboard tiles, create/edit/delete a reagent.
   (defaults to `http://localhost:8082`); you can set it to the Railway
   backend URL to use it against the deployed API, but the desktop app itself
   is not deployed.
-- **Anthropic key is optional.** Without `ANTHROPIC_API_KEY` the
-  "Ask your inventory" feature runs in regex/mock mode — no signup needed.
-
 ## How to run the tests
 
 ```bash
