@@ -6,9 +6,11 @@ export default defineConfig({
   server: {
     port: 5175,
     strictPort: false,
+    // Dev-server proxy so the SPA can use relative /api/* URLs in both dev
+    // (here) and prod (the nginx container). Backend always on :8082 locally.
     proxy: {
       '/api': {
-        target: process.env.VITE_DEV_API_TARGET ?? 'http://localhost:8082',
+        target: 'http://localhost:8082',
         changeOrigin: true,
       },
     },
