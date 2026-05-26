@@ -239,25 +239,44 @@ manually — the backend's `DatabaseUrlEnvironmentPostProcessor` parses
 1. **+ New → GitHub Repo →** same repo, second service.
 2. **Settings → Root Directory** = `frontend`. Railway will use
    `frontend/Dockerfile`.
-3. **Variables** — note `VITE_API_BASE_URL` must be a **Build Variable**
-   (Vite bakes it into the bundle at build time):
+3. **Variables** — set one runtime variable so nginx can reverse-proxy
+   `/api/*` to the backend (this is what keeps the session cookie first-party
+   on mobile browsers; see "Why the proxy" below):
 
    | Variable | Value |
    |---|---|
-   | `VITE_API_BASE_URL` | `https://<backend>.up.railway.app` (no trailing slash) |
+   | `API_PROXY_TARGET` | `https://<backend>.up.railway.app` (no trailing slash) |
 
-   In Railway: **Variables → Add Variable → Build Variable**, key
-   `VITE_API_BASE_URL`, value the backend's public URL. The `Dockerfile`
-   exposes it via `ARG VITE_API_BASE_URL`.
+   **Do not set `VITE_API_BASE_URL`.** Leaving it unset makes the SPA issue
+   relative `/api/...` fetches, which nginx then proxies to
+   `API_PROXY_TARGET`. If you set it to an absolute URL the browser will go
+   cross-site again and mobile sign-in will break.
 
 4. **Deploy**. Open the assigned domain — the **Sign in** card should render.
 
 ### 4. Wire CORS once both URLs exist
 
-After the frontend's domain is provisioned, go back to the **backend**
-service's `APP_CORS_ALLOWED_ORIGINS` and set it to the frontend's exact
-`https://…up.railway.app` origin. Trigger a redeploy of the backend so the
-new value is picked up.
+With the nginx proxy in place the SPA's API calls are same-origin, so CORS
+is no longer load-bearing for the web UI. The backend still consults
+`APP_CORS_ALLOWED_ORIGINS` for any direct, cross-origin client (e.g. the
+Swing viewer pointed at the Railway backend, or `curl` from another host),
+so it's still worth setting the backend's `APP_CORS_ALLOWED_ORIGINS` to the
+frontend's exact `https://…up.railway.app` origin and redeploying.
+
+### Why the proxy
+
+The SPA and API live on different `*.up.railway.app` subdomains, which are
+separate sites for cookie purposes (`up.railway.app` is on the Public Suffix
+List). iOS Safari and Chrome on Android drop the `JSESSIONID` cookie on the
+cross-site login response — the request returns 200, but the very next
+authenticated call 401s, `App.tsx` flips `authUser` back to `null`, and the
+user appears stuck on the sign-in page.
+
+`frontend/nginx.conf` adds a `location /api/` block that proxies to
+`API_PROXY_TARGET`. The browser only sees responses from the frontend's
+origin, so the cookie is stored as first-party and survives the round-trip
+on every device. The trade-off is one extra hop per API call through the
+frontend container — acceptable for this app.
 
 ### Smoke test
 
@@ -283,13 +302,12 @@ verify the dashboard tiles, create/edit/delete a reagent.
 
 ### Known limitations
 
-- **Cross-origin session cookies.** The SPA on `<frontend>.up.railway.app`
-  calls the API on `<backend>.up.railway.app`. The browser only sends the
-  session cookie when the backend issues it as `SameSite=None; Secure` *and*
-  the frontend origin is in the CORS allow-list — the prod profile and
-  `APP_CORS_ALLOWED_ORIGINS` exist exactly for that. If sign-in returns 200
-  but `/api/auth/me` returns 401 on the next request, the cookie was rejected
-  — re-check those two variables.
+- **Session cookie still depends on the proxy.** Sign-in goes through the
+  nginx `/api/` proxy described above so the cookie is first-party on
+  `<frontend>.up.railway.app`. If `API_PROXY_TARGET` is wrong, missing the
+  scheme, or has a trailing slash (nginx then rewrites the path and strips
+  `/api`), every authenticated call will 401 and the user will look stuck on
+  the sign-in page — re-check that variable first.
 - **Swing admin viewer is local only.** It points at `LAB_INVENTORY_API`
   (defaults to `http://localhost:8082`); you can set it to the Railway
   backend URL to use it against the deployed API, but the desktop app itself

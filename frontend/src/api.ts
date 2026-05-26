@@ -1,6 +1,10 @@
 import type { AuthUser, DashboardSummary, ImportResult, PageResponse, Reagent, ReagentEvent, ReagentInput } from './types'
 
-const BASE = import.meta.env?.VITE_API_BASE_URL ?? 'http://localhost:8082'
+// Empty default → relative URLs. The dev server (vite.config.ts) proxies
+// /api/* to the backend on localhost:8082, and the production nginx container
+// proxies /api/* to the backend's Railway URL. Both flows give the SPA and API
+// the same origin, so the session cookie is first-party on every device.
+const BASE = import.meta.env?.VITE_API_BASE_URL ?? ''
 
 export class ConflictError extends Error {
   body: unknown
