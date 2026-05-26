@@ -22,8 +22,14 @@ public class SeedUserLoader {
         return args -> {
             String uname = username == null ? "yash.s" : username.trim().toLowerCase();
             if (uname.isEmpty()) return;
-            if (users.findByUsernameIgnoreCase(uname).isPresent()) return;
-            users.save(new AppUser(uname, encoder.encode(password), displayName, "LAB_TECH"));
+            users.findByUsernameIgnoreCase(uname).ifPresentOrElse(
+                    existing -> {
+                        existing.setPasswordHash(encoder.encode(password));
+                        existing.setDisplayName(displayName);
+                        users.save(existing);
+                    },
+                    () -> users.save(new AppUser(uname, encoder.encode(password), displayName, "LAB_TECH"))
+            );
         };
     }
 }
