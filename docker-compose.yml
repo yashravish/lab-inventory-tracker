@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lab-inventory-postgres
+    environment:
+      POSTGRES_DB: labinventory
+      POSTGRES_USER: labinventory
+      POSTGRES_PASSWORD: labinventory
+    ports:
+      - "5435:5432"
+    volumes:
+      - lab_inventory_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U labinventory -d labinventory"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  lab_inventory_pgdata:

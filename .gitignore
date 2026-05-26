@@ -1,0 +1,29 @@
+# Java / Maven
+backend/target/
+swing-admin/target/
+*.class
+*.jar
+*.war
+.mvn/
+hs_err_pid*
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# Editors / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Local tool state
+.claude/
+frontend/tsconfig.tsbuildinfo
